@@ -13,6 +13,12 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-    # Will add User Profile later
-    # Will add image later
-    # Will add review later
+
+
+class ProductImages(models.Model):
+    product = models.ForeignKey(Product,on_delete=models.CASCADE, null=True,related_name="images")
+    image = models.ImageField(upload_to="products",blank=True,null=True)
+
+    class Meta:
+        verbose_name = "Product Image"
+        verbose_name_plural = "Product Images"
