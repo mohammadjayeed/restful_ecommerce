@@ -12,7 +12,7 @@ def get_products(request):
     products = Product.objects.all()
 
     count = products.count()
-    result_per_page = 1
+    result_per_page = 2
 
     paginator = PageNumberPagination()
     paginator.page_size = result_per_page
@@ -40,9 +40,8 @@ def get_product_detail(request,pk):
 
 
 @api_view(['POST'])
-def upload_product_images(request):
-    data = request.data
-    product_id = data['product']
+def upload_product_images(request,pk):
+    product_id = pk
     files = request.FILES.getlist('images')
 
     images = []
