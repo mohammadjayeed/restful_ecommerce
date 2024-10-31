@@ -1,11 +1,11 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
-from .models import Product, ProductImages
+from .models import Product, ProductImages, Review
 from .serializers import ProductSerializer, ProductImageSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .permissions import IsAdminUserForPost, IsAdminUserForUpdateDelete
 # Create your views here.
 
@@ -84,3 +84,36 @@ def upload_product_images(request,pk):
 
 
 
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def create_delete_review(request, pk):
+    user = request.user
+    product = get_object_or_404(Product, pk=pk)
+
+    
+    if request.method == 'POST':
+        data = request.data
+        review = product.reviews.filter(user=user)
+
+        if review.exists():
+            
+            review.update(comment=data['comment'])
+            return Response({'message': 'Review updated'}, status=status.HTTP_200_OK)
+
+        
+        Review.objects.create(
+            user=user,
+            product=product,
+            comment=data['comment']
+        )
+        return Response({'message': 'Review created'}, status=status.HTTP_201_CREATED)
+
+    
+    elif request.method == 'DELETE':
+        review = product.reviews.filter(user=user)
+
+        if review.exists():
+            review.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)

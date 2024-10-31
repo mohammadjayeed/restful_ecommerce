@@ -13,7 +13,8 @@ class SignUpSerializer(serializers.ModelSerializer):
             'email': {'required':True, "allow_blank":False},
             'password': {'required':True, "allow_blank":False, 'min_length':4},
             'first_name': {'required': True, 'allow_blank':False},  
-            'last_name': {'required': True, 'allow_blank':False},  
+            'last_name': {'required': True, 'allow_blank':False}, 
+            'is_staff': {'required': True},  
 
 
         }
@@ -21,4 +22,4 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username','email','first_name','last_name','is_staff')
+        fields = ('username','email','first_name','last_name')
