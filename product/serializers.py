@@ -12,3 +12,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['name','description','price','rating','stock','images']
 
+        extra_kwargs = {
+            "name": {"required":True, "allow_blank":False}
+        }
+

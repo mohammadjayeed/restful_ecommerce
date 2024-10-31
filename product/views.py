@@ -1,41 +1,58 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
+from rest_framework import status
 from .models import Product, ProductImages
 from .serializers import ProductSerializer, ProductImageSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 # Create your views here.
 
-@api_view(['GET'])
-def get_products(request):
 
-    products = Product.objects.all()
+@api_view(['POST', 'GET'])
+def list_create_products(request):
+    if request.method == 'POST': # create operation
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'product': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    count = products.count()
-    result_per_page = 2
+    elif request.method == 'GET':
+        # Get products
+        products = Product.objects.all()
+        # count = products.count()
+        result_per_page = 2
 
-    paginator = PageNumberPagination()
-    paginator.page_size = result_per_page
+        paginator = PageNumberPagination()
+        paginator.page_size = result_per_page
+        queryset = paginator.paginate_queryset(products, request)
 
-    queryset = paginator.paginate_queryset(products,request)
-
-    serializer = ProductSerializer(queryset, many=True)
-
-    return Response({
-        'sitewide_products_available': count,
-        'result_per_page': result_per_page,
-        'products':serializer.data
+        serializer = ProductSerializer(queryset, many=True)
+        return paginator.get_paginated_response({
+            'result_per_page': result_per_page,
+            'products': serializer.data
         })
 
-@api_view(['GET'])
+@api_view(['GET','PUT','DELETE'])
 def get_product_detail(request,pk):
 
     product = get_object_or_404(Product,pk=pk)
 
-    serializer = ProductSerializer(product, many=False)
+    if request.method == "GET": #retrieve operation
 
-    return Response({'product':serializer.data})
+        serializer = ProductSerializer(product) 
+        return Response({'product':serializer.data},status=status.HTTP_200_OK)
 
+    elif request.method == "PUT":
+        serializer = ProductSerializer(product,data=request.data) # update operation
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status= status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == "DELETE":
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -58,7 +75,7 @@ def upload_product_images(request,pk):
     
     serializer = ProductImageSerializer(images, many=True)
 
-    return Response(serializer.data)
+    return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 
