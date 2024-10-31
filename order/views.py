@@ -1,11 +1,56 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Order, OrderItem
 from product.models import Product
 from .serializers import OrderSerializer
+from django.db import transaction
+
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def process_order(request, pk):
+    with transaction.atomic():
+        order = get_object_or_404(Order, pk=pk)
+        order.status = request.data.get('status')
+        order.save()
+        serializer = OrderSerializer(order, many=False)
+        return Response({'order': serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_order(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    
+    order.delete()
+
+    return Response({'details': 'Order is deleted.'})
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_orders(request):
+
+    order = Order.objects.all()
+    serializer = OrderSerializer(order, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_single_order(request,pk):
+
+    order = get_object_or_404(Order, pk=pk)
+    serializer = OrderSerializer(order,many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
