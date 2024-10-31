@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include("product.urls")),
+    path('api/v1/', include("order.urls")),
     path('api/token/', TokenObtainPairView.as_view()),
     path('accounts/', include("account.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

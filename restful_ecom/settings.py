@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_cleanup',
     'product',
-    'account'
+    'account',
+    'order',
 ]
 
 MIDDLEWARE = [
