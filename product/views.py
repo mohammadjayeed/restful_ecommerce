@@ -61,7 +61,7 @@ def get_product_detail(request,pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def upload_product_images(request,pk):
     product_id = pk
     files = request.FILES.getlist('images')

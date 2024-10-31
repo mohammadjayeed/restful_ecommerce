@@ -12,7 +12,7 @@ from django.db import transaction
 
 
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def process_order(request, pk):
     with transaction.atomic():
         order = get_object_or_404(Order, pk=pk)
@@ -23,7 +23,7 @@ def process_order(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def delete_order(request, pk):
     order = get_object_or_404(Order, pk=pk)
     
@@ -36,7 +36,7 @@ def delete_order(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_orders(request):
 
     order = Order.objects.all()
@@ -45,7 +45,7 @@ def get_orders(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def get_single_order(request,pk):
 
     order = get_object_or_404(Order, pk=pk)
