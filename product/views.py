@@ -1,14 +1,17 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from .models import Product, ProductImages
 from .serializers import ProductSerializer, ProductImageSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser
+from .permissions import IsAdminUserForPost, IsAdminUserForUpdateDelete
 # Create your views here.
 
 
 @api_view(['POST', 'GET'])
+@permission_classes([IsAdminUserForPost])
 def list_create_products(request):
     if request.method == 'POST': # create operation
         serializer = ProductSerializer(data=request.data)
@@ -34,6 +37,7 @@ def list_create_products(request):
         })
 
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAdminUserForUpdateDelete])
 def get_product_detail(request,pk):
 
     product = get_object_or_404(Product,pk=pk)
@@ -57,6 +61,7 @@ def get_product_detail(request,pk):
 
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def upload_product_images(request,pk):
     product_id = pk
     files = request.FILES.getlist('images')
