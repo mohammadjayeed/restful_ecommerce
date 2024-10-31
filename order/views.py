@@ -7,9 +7,9 @@ from .models import Order, OrderItem
 from product.models import Product
 from .serializers import OrderSerializer
 from django.db import transaction
-
-
-
+import stripe
+import os
+from utils.helpers import get_current_host
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -105,3 +105,59 @@ def place_order(request):
 
         serializer = OrderSerializer(order,many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+
+
+stripe.api_key = os.environ.get('STRIPE_PRIVATE_KEY')
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_checkout_session(request):
+    DOMAIN =  get_current_host(request)
+    user = request.user
+    data = request.data
+
+    order_items = data['orderItems']
+
+    shipping_details= {
+        'street': data['street'],
+        'city': data['city'],
+        'state': data['state'],
+        'zip_code': data['zip_code'],
+        'phone_no': data['phone_no'],
+        'country': data['country'],
+        'user': user.id
+        
+    }
+
+    checkout_order_items = []
+
+    for item in order_items:
+        checkout_order_items.append({
+            'price_data':{
+                'currency': 'usd',
+                'product_data': {
+                    'name': item['name'],
+                    'images': [item['image']],
+                    'metadata': { "product_id": item['product']}
+                },
+                'unit_amount': item['price'] * 100
+            },
+                'quantity': item['quantity'],
+        })
+
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        metadata= shipping_details,
+        line_items= checkout_order_items,
+        customer_email = user.email,
+        mode='payment',
+        success_url=DOMAIN,
+        cancel_url=DOMAIN
+
+
+    )
+
+    return Response({'session': session}, status=status.HTTP_200_OK)
