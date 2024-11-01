@@ -10,6 +10,7 @@ from django.db import transaction
 import stripe
 import os
 from utils.helpers import get_current_host
+from django.contrib.auth.models import User
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -161,3 +162,69 @@ def create_checkout_session(request):
     )
 
     return Response({'session': session}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def stripe_webhook(request):
+  
+  webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+  payload = request.body
+  sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+  event = None
+
+  try:
+    event = stripe.Webhook.construct_event(
+      payload, sig_header, webhook_secret
+    )
+  except ValueError as e:
+    return Response({'error': 'Invalid payload'}, status=status.HTTP_400_BAD_REQUEST)
+  except stripe.error.SignatureVerificationError as e:
+    return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
+
+  
+  if event.type == 'checkout.session.completed':
+     session = event['data']['object']
+
+     line_items = stripe.checkout.Session.list_line_items(session['id'])
+     price = session['amount_total']/100
+
+
+     order = Order.objects.create(
+
+        user = User(session.metadata.user),
+        street = session.metadata.street,
+        city = session.metadata.city,
+        zip_code = session.metadata.zip_code,
+        state=session.metadata.state,
+        phone_no = session.metadata.phone_no,
+        country = session.metadata.country,
+        total_amount = price,
+        payment_status="PAID",
+     )
+
+     for item in line_items['data']:
+
+
+        line_product = stripe.Product.retrieve(item.price.product)
+        product_id = line_product.metadata.product_id
+
+        product = Product.objects.get(id=product_id)
+
+        item = OrderItem.objects.create(
+           
+            product=product,
+            order=order,
+            name=product.name,
+            quantity=item.quantity,
+            price=item.price.unit_amount / 100,
+            image= line_product.images[0]
+
+        )
+        
+        product.stock -= item.quantity
+        product.save()
+
+
+
+     return Response({'details': 'payment successful'})
+  
