@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import Http404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ import stripe
 import os
 from utils.helpers import get_current_host
 from django.contrib.auth.models import User
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -64,8 +66,11 @@ def place_order(request):
 
     order_items = data['orderItems']
 
-    if order_items and len(order_items)==0:
+    if not order_items:
         return Response({'error': 'Order items cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if any(item["quantity"] <= 0 for item in order_items):
+        return Response({'error': 'Order items cannot have zero or negative quantities'}, status=status.HTTP_400_BAD_REQUEST)
 
     else:
 
@@ -85,9 +90,19 @@ def place_order(request):
         order_items_to_create = []
 
         for item in order_items:
-            product = get_object_or_404(Product, id=item["product"])
+            
+            product_id = item["product"]
+
+            
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                order.delete()
+                raise Http404("Product not found")
 
             if product.stock < item['quantity']:
+                print('i was here')
+                order.delete()
                 return Response({'error': f'Not enough stock for {product.name}'}, status=status.HTTP_400_BAD_REQUEST)
 
             _items = OrderItem(

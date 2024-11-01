@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .serializers import SignUpSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
+
+
+
 @api_view(['POST'])
 def register(request):
 

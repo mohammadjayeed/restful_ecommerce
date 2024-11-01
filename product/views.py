@@ -2,11 +2,12 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from .models import Product, ProductImages, Review
-from .serializers import ProductSerializer, ProductImageSerializer
+from .serializers import ProductSerializer, ProductImageSerializer, ReviewSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .permissions import IsAdminUserForPost, IsAdminUserForUpdateDelete
+
 # Create your views here.
 
 
@@ -36,6 +37,7 @@ def list_create_products(request):
             'products': serializer.data
         })
 
+
 @api_view(['GET','PUT','DELETE'])
 @permission_classes([IsAdminUserForUpdateDelete])
 def get_product_detail(request,pk):
@@ -57,7 +59,6 @@ def get_product_detail(request,pk):
     elif request.method == "DELETE":
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 @api_view(['POST'])
