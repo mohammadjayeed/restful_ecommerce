@@ -28,7 +28,7 @@
 ## Step 3 - Dependencies
 - Install dependencies
 ```bash
-  pip install -r requirement.txt
+  pip install -r requirements.txt
 ```
 ## Step 4 - Migrations
 - Run the following command to apply it to the database
@@ -63,6 +63,15 @@ A prompt will show up. Type:
 ```
 - Provide user credentials as necessary 
 
+## Challenges
+
+- While implementing order placement endpoint , had to go through some rigorous edge case checking
+- postgres library has two binaries - one for windows which might psycopg , for linux psycopg-binary
+- Initially tried Swagger Documentation, but it did not grab api endpoints or let me implement image
+  attachment unless class based views are used; as a result switched to postman documentation, which
+  is more robust and friendly (in my opinion)
+- Stripe webhook might be considered as an obstacle for local development, though I implemented it perfectly
+  and also received response 200 in the cli; subsequently an order was auto placed.
 
 
 
