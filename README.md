@@ -1,9 +1,6 @@
-## Endpoint Documentation
-- [API Endpoints Collection](https://documenter.getpostman.com/view/20444054/2sAY4x9MRh)
-
 ## Special Instruction
 - .env file wthin restful_ecom is for local installation
-- .env file in the root directory is for docker based deployment
+- .env file in the root directory is for docker based deployment, remove it if you want to try local first
 -  please note that postgres has been used as database
 
 
@@ -40,38 +37,28 @@
 ```bash
   python manage.py createsuperuser
 ```
-## Step 6 - Start App
+
+## Step 6 - Run Redis With Docker
+```bash
+  docker run -d -p 6379:6379 redis
+```
+
+## Step 7 - Configure SMTP in .env
+- You might have to create App password authentication for Google
+- You can follow any other mailserver tutorial on youtube
+
+## Step 8 - Start App
 - Start the application by typing the following command
 ```bash
   python manage.py runserver
 ```
 
-# Docker Installation
-- Make sure you have docker installed on your machine
-
-- From the terminal, input these commands:
+## Step 9 - Start Celery
 ```bash
-  docker compose up --build
+celery -A restful_ecom worker --loglevel=info
 ```
-- Finally create a superuser (if you would like to) with the following commands:
+
+## Step 10 - Start Celery Beat
 ```bash
-  docker exec -it <container_id_or_name> /bin/bash
+celery -A restful_ecom beat
 ```
-A prompt will show up. Type:
-```bash
-  python manage.py createsuperuser
-```
-- Provide user credentials as necessary 
-
-## Challenges
-
-- While implementing order placement endpoint , had to go through some rigorous edge case checking
-- postgres library has two binaries - one for windows which might psycopg , for linux psycopg-binary
-- Initially tried Swagger Documentation, but it did not grab api endpoints or let me implement image
-  attachment unless class based views are used; as a result switched to postman documentation, which
-  is more robust and friendly (in my opinion)
-- Stripe webhook might be considered as an obstacle for local development, though I implemented it perfectly
-  and also received response 200 in the cli; subsequently an order was auto placed.
-
-
-
