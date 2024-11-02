@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .permissions import IsAdminUserForPost, IsAdminUserForUpdateDelete
-
+from order.models import OrderItem
 # Create your views here.
 
 
@@ -91,6 +91,19 @@ def create_delete_review(request, pk):
     user = request.user
     product = get_object_or_404(Product, pk=pk)
 
+    order_items_with_product = OrderItem.objects.filter(order__user=user, product=product)
+    
+    
+    if not order_items_with_product.exists():
+        return Response({'error': 'You need to have purchased this product to review it.'},
+                        status=status.HTTP_403_FORBIDDEN)
+    
+    
+    paid_order = order_items_with_product.filter(order__payment_status="PAID").exists()
+    
+    if not paid_order:
+        return Response({'error': 'You cannot review the product until a payment has been made.'},
+                        status=status.HTTP_403_FORBIDDEN)
     
     if request.method == 'POST':
         data = request.data
